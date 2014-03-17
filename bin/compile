@@ -6,7 +6,8 @@ set -eo pipefail
 mkdir -p "$1" "$2"
 build=$(cd "$1/" && pwd)
 cache=$(cd "$2/" && pwd)
-ver=${GOVERSION:-1.2}
+ver=${GOVERSION:-1.2.1}
+ver_dir=go_$ver
 file=${GOFILE:-go$ver.$(uname|tr A-Z a-z)-amd64.tar.gz}
 url=${GOURL:-http://go.googlecode.com/files/$file}
 buildpack=$(dirname $(dirname $0))
@@ -29,23 +30,24 @@ then
     exit 1
 fi
 
+
 # Download (if not cached) and install Go
-if test -d $cache/go
+if test -d $cache/$ver_dir
 then
-    v=$(cat $cache/go/VERSION)
+    v=$(cat $cache/$ver_dir/VERSION)
     echo " Using Go ${v:2:${#v}}"
 else
-    rm -rf $cache/go
-    mkdir -p $cache/go
+    rm -rf $cache/$ver_dir
+    mkdir -p $cache/$ver_dir
     echo -n " Installing Go $ver..."
     ts=`date +%s`
     curl -sO $url
-    tar -C $cache/go -zxf $file --strip-components=1
+    tar -C $cache/$ver_dir -zxf $file --strip-components=1
     rm -f $file
     te=`date +%s`
     echo "  done in $(($te-$ts))s"
 fi
-export GOROOT=$cache/go
+export GOROOT=$cache/$ver_dir
 export GOPATH=$build/.cf/go
 
 # Check if Mercurial and Bazaar are installed
